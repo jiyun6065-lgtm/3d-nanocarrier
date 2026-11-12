@@ -180,28 +180,37 @@ const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 
 const joystickWrapper = document.getElementById('joystick-wrapper');
 if (isTouchDevice) joystickWrapper.style.display = 'block';
 
+// 시작 버튼 및 모달 요소 가져오기
 const startBtn = document.getElementById('start-btn');
 const startScreen = document.getElementById('start-screen');
 
-function resetGamePosition() {
-    hp = 100;
-    collectedCodes = ["_", "_", "_"];
-    updateCodeDisplay();
-    document.getElementById('hp').innerText = '100%';
-    gameStarted = false;
-    isGameOver = false;
-    inModal = false;
-    nearbyTarget = null;
-    document.getElementById('interact-prompt').style.display = 'none';
+function onStartMission(e) {
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    // 1. 게임 위치 및 데이터 초기화
+    resetGamePosition();
+    
+    // 2. 시작 화면 숨기기
+    if (startScreen) {
+        startScreen.style.display = 'none';
+    }
+    
+    // 3. 게임 시작 상태로 변경
+    gameStarted = true;
 
-    camera.position.set(0, 1.6, 0);
-    camera.rotation.set(0, 0, 0);
-    enemy.position.set(0, 1.2, 8);
+    // 4. PC(마우스) 환경인 경우 PointerLock 실행
+    if (!isTouchDevice && document.body.requestPointerLock) {
+        document.body.requestPointerLock();
+    }
+}
 
-    chestMeshes.forEach(c => {
-        c.userData.opened = false;
-        c.material.color.setHex(0xf59e0b);
-    });
+// 클릭 및 터치 이벤트 모두 등록
+if (startBtn) {
+    startBtn.onclick = onStartMission;
+    startBtn.addEventListener('touchstart', onStartMission, { passive: false });
 }
 
 function onStartMission(e) {
