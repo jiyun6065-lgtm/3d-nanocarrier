@@ -9,33 +9,27 @@
 </head>
 <body>
 
-    <!-- 조준점 UI -->
     <div id="crosshair"></div>
 
-    <!-- 상단 HUD (상태 정보) -->
     <div class="hud">
         <div>지질막 내구도: <span id="hp" style="color: #4ade80;">100%</span></div>
         <div>수집한 코드: <span id="code-display" style="color: #fbbf24; font-size: 16px;">[ _ ] [ _ ] [ _ ]</span></div>
     </div>
 
-    <!-- 근처 오브젝트 상호작용 프롬프트 버튼 -->
     <div id="interact-prompt" onclick="triggerNearbyInteraction()">[ 상호작용 ]</div>
 
-    <!-- 모바일 전용 조이스틱 고정 레이아웃 -->
     <div id="joystick-wrapper">
         <div id="joystick-zone">
             <div id="joystick-knob"></div>
         </div>
     </div>
 
-    <!-- 게임 시작 대기 화면 -->
     <div id="start-screen" class="overlay-screen">
         <h1 style="color:#fbbf24;">세포 연구소 던전 탈출</h1>
         <p>각 방에 숨겨진 3개의 암호 상자 문제를 맞춰 코드를 모으고<br>중앙 2층 게이트로 탈출하세요!</p>
         <button id="start-btn" class="start-btn">DUNGEON START</button>
     </div>
 
-    <!-- 암호 문제 퀴즈 모달 팝업 -->
     <div id="quiz-modal" class="modal">
         <h2 id="quiz-title">암호 상자 발견!</h2>
         <p id="quiz-question"></p>
@@ -43,7 +37,6 @@
         <button onclick="closeModal('quiz-modal')" class="start-btn" style="padding: 8px 20px; font-size: 14px; background: #64748b; margin-top: 10px;">닫기</button>
     </div>
 
-    <!-- 최종 탈출 게이트 암호 입력 모달 팝업 -->
     <div id="gate-modal" class="modal">
         <h2>표적 수용체 게이트</h2>
         <p>수집한 3자리 암호 코드를 입력하세요!</p>
@@ -53,10 +46,8 @@
         <button onclick="closeModal('gate-modal')" class="start-btn" style="padding: 8px 20px; font-size: 16px; background: #64748b; margin-left: 10px;">닫기</button>
     </div>
 
-    <!-- 게임 결과 (성공/실패) 메시지 텍스트 -->
     <div id="message-text"></div>
 
-    <!-- 메인 게임 스크립트 (반드시 body 맨 아래에 위치) -->
     <script src="game.js"></script>
 </body>
 </html>
