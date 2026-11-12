@@ -65,7 +65,7 @@ html, body {
 }
 
 /* =========================================================
-   시작 화면 스타일
+   Dragon's Dogma 비율 + 기존 다크 청록 컬러 유지 시작 화면
    ========================================================= */
 .overlay-screen {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -80,6 +80,7 @@ html, body {
     z-index: 1;
 }
 
+/* 세포 연구소 던전 SVG 아트워크 배경 */
 .theme-backdrop {
     position: absolute;
     inset: 0;
@@ -136,6 +137,7 @@ html, body {
     pointer-events: none;
 }
 
+/* 화면 정중앙을 가로지르는 타이틀 로고 (Dragon's Dogma 비율) */
 .center-hero-group {
     position: absolute;
     top: 45%;
@@ -170,6 +172,7 @@ html, body {
     white-space: nowrap;
 }
 
+/* 타이틀 아래 텍스트형 START GAME 버튼 영역 (Dragon's Dogma 비율) */
 .clean-action-area {
     position: absolute;
     top: 66%;
@@ -198,6 +201,7 @@ html, body {
     pointer-events: auto;
 }
 
+/* 버튼 위아래 은은한 빛줄기 구분선 */
 .clean-start-btn::before,
 .clean-start-btn::after {
     content: "";
@@ -244,6 +248,7 @@ html, body {
     color: #f8fafc;
 }
 
+/* 임무 브리핑 팝업 창 */
 .briefing-panel {
     position: absolute;
     top: 50%; left: 50%;
@@ -285,6 +290,7 @@ html, body {
     cursor: pointer;
 }
 
+/* 하단 로고 표기 위치 (Dragon's Dogma 하단 CAPCOM 로고 위치 오마주) */
 .bottom-brand {
     position: absolute;
     bottom: 8%;
