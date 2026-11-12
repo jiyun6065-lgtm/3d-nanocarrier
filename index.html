@@ -2,45 +2,58 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>NanoCarrier 3D: 연구소 방탈출 시뮬레이터</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>NanoCarrier 3D: LAB ESCAPE</title>
     <style>
         * { box-sizing: border-box; }
-        body { 
-            margin: 0; overflow: hidden; background: #0f172a; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+        html, body {
+            width: 100%; height: 100%; height: 100dvh;
+            margin: 0; padding: 0; overflow: hidden; background: #0f172a;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             color: white; user-select: none; -webkit-user-select: none; touch-action: none;
         }
-        
+
         #crosshair {
             position: absolute; top: 50%; left: 50%; width: 8px; height: 8px;
-            margin-top: -4px; margin-left: -4px; border-radius: 50%; 
+            margin-top: -4px; margin-left: -4px; border-radius: 50%;
             background: rgba(255, 255, 255, 0.8); border: 1px solid rgba(0, 0, 0, 0.5);
             pointer-events: none; z-index: 5;
         }
 
         .hud {
             position: absolute; top: 15px; left: 15px; font-size: 14px; font-weight: bold;
-            background: rgba(15, 23, 42, 0.85); padding: 12px 16px; border-radius: 12px; 
+            background: rgba(15, 23, 42, 0.85); padding: 12px 16px; border-radius: 12px;
             border: 1px solid #38bdf8; backdrop-filter: blur(4px); z-index: 10;
         }
 
-        /* 모바일 터치 조이스틱 */
+        /* 상자/게이트 접근 시 나타나는 상호작용 프롬프트 버튼 */
+        #interact-prompt {
+            position: absolute; bottom: 180px; left: 50%; transform: translateX(-50%);
+            background: rgba(2, 132, 199, 0.9); border: 2px solid #38bdf8; color: white;
+            padding: 12px 24px; border-radius: 25px; font-weight: bold; font-size: 16px;
+            display: none; z-index: 35; box-shadow: 0 0 15px rgba(56, 189, 248, 0.6);
+            cursor: pointer;
+        }
+
+        /* 크롬 / 사파리 하단 바 높이 호환 조이스틱 레이아웃 */
         #touch-controls {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 20; pointer-events: auto; display: none;
+            z-index: 20; pointer-events: none; display: none;
         }
         #joystick-zone {
-            position: absolute; bottom: 30px; left: 30px; width: 120px; height: 120px;
+            position: absolute; 
+            bottom: calc(30px + env(safe-area-inset-bottom, 0px)); 
+            left: 25px; 
+            width: 120px; height: 120px;
             background: rgba(255, 255, 255, 0.15); border: 2px solid rgba(56, 189, 248, 0.6);
-            border-radius: 50%; touch-action: none;
+            border-radius: 50%; touch-action: none; pointer-events: auto;
         }
         #joystick-knob {
             position: absolute; top: 35px; left: 35px; width: 50px; height: 50px;
             background: #38bdf8; border-radius: 50%; pointer-events: none;
         }
 
-        /* 퀴즈 및 암호 입력 팝업 모달 */
+        /* 모달 팝업 공통 */
         .modal {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: rgba(15, 23, 42, 0.95); border: 2px solid #38bdf8; border-radius: 16px;
@@ -56,15 +69,14 @@
         }
         .quiz-option:hover { background: #0284c7; }
 
-        /* 시작 & 결과 모달 */
         .overlay-screen {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(15, 23, 42, 0.92); display: flex; flex-direction: column; 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.92); display: flex; flex-direction: column;
             justify-content: center; align-items: center; z-index: 100; text-align: center; padding: 20px;
         }
         .start-btn {
-            padding: 14px 36px; font-size: 18px; font-weight: bold; 
-            background: linear-gradient(135deg, #0284c7, #0369a1); color: white; 
+            padding: 14px 36px; font-size: 18px; font-weight: bold;
+            background: linear-gradient(135deg, #0284c7, #0369a1); color: white;
             border: none; border-radius: 30px; cursor: pointer; margin-top: 15px;
         }
 
@@ -83,7 +95,10 @@
         <div>수집한 코드: <span id="code-display" style="color: #f59e0b; font-size: 16px;">[ _ ] [ _ ] [ _ ]</span></div>
     </div>
 
-    <!-- 모바일 조이스틱 -->
+    <!-- 상호작용 알림 버튼 -->
+    <div id="interact-prompt" onclick="triggerNearbyInteraction()">[ 열기 / 입력 ]</div>
+
+    <!-- 터치 패드 컨트롤 -->
     <div id="touch-controls">
         <div id="joystick-zone"><div id="joystick-knob"></div></div>
     </div>
@@ -91,7 +106,7 @@
     <!-- 시작 화면 -->
     <div id="start-screen" class="overlay-screen">
         <h1 style="color:#38bdf8;">NanoCarrier 3D: LAB ESCAPE</h1>
-        <p>세포 분해 효소를 피하면서 세트장 곳곳의 상자를 찾아<br>생명·화학 문제를 맞히고 탈출 암호를 수집하세요!</p>
+        <p>세포 분해 효소를 피하며 세트장의 상자를 찾아<br>생명·화학 문제를 맞히고 탈출 암호를 수집하세요!</p>
         <button id="start-btn" class="start-btn">MISSION START</button>
     </div>
 
@@ -100,6 +115,7 @@
         <h2 id="quiz-title">암호 상자 발견!</h2>
         <p id="quiz-question">질문 내용이 여기에 표시됩니다.</p>
         <div id="quiz-options"></div>
+        <button onclick="closeModal('quiz-modal')" class="start-btn" style="padding: 8px 20px; font-size: 14px; background: #64748b; margin-top: 10px;">닫기</button>
     </div>
 
     <!-- 최종 탈출 코드 입력 모달 -->
@@ -115,7 +131,7 @@
     <div id="message-text"></div>
 
 <script>
-    // 1. Scene & Lighting (밝은 세트장 조명)
+    // 1. Scene & Camera
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x1e293b);
     scene.fog = new THREE.FogExp2(0x1e293b, 0.02);
@@ -131,35 +147,22 @@
     scene.add(camera);
     scene.add(new THREE.AmbientLight(0x94a3b8, 1.5));
 
-    // 2. 퀴즈 데이터
+    // 퀴즈 데이터
     const quizzes = [
-        {
-            q: "세포막의 주요 구성 성분으로, 친수성 머리와 소수성 다리를 가진 물질은?",
-            options: ["1. 인지질", "2. 포도당", "3. 아미노산"],
-            ans: 0, code: "7"
-        },
-        {
-            q: "약물 전달 시스템(DDS)에서 표적 세포에 특이적으로 결합하는 수용체 부착물은?",
-            options: ["1. 알콜", "2. 리간드", "3. 효소"],
-            ans: 1, code: "3"
-        },
-        {
-            q: "체내 산성 환경(pH 감소)을 만들어 약물 캡슐을 분해하는 세포 소기관은?",
-            options: ["1. 리보솜", "2. 엽록체", "3. 리소좀"],
-            ans: 2, code: "9"
-        }
+        { q: "세포막의 주요 구성 성분으로, 친수성 머리와 소수성 다리를 가진 물질은?", options: ["1. 인지질", "2. 포도당", "3. 아미노산"], ans: 0, code: "7" },
+        { q: "약물 전달 시스템(DDS)에서 표적 세포에 특이적으로 결합하는 수용체 부착물은?", options: ["1. 알콜", "2. 리간드", "3. 효소"], ans: 1, code: "3" },
+        { q: "체내 산성 환경(pH 감소)을 만들어 약물 캡슐을 분해하는 세포 소기관은?", options: ["1. 리보솜", "2. 엽록체", "3. 리소좀"], ans: 2, code: "9" }
     ];
 
     let collectedCodes = ["_", "_", "_"];
     const wallBoxes = [];
     const chestMeshes = [];
 
-    // 3. 맵 지형 생성
+    // 맵 지형
     const mapSize = 40;
     const wallGeo = new THREE.BoxGeometry(4, 4, 4);
     const wallMat = new THREE.MeshStandardMaterial({ color: 0x334155 });
 
-    // 외곽 벽
     for (let x = -mapSize/2; x <= mapSize/2; x += 4) {
         for (let z = -mapSize/2; z <= mapSize/2; z += 4) {
             if (x === -mapSize/2 || x === mapSize/2 || z === -mapSize/2 || z === mapSize/2) {
@@ -171,7 +174,6 @@
         }
     }
 
-    // 기둥 장애물
     const pillarPositions = [[-10, -10], [10, -10], [-10, 10], [10, 10]];
     pillarPositions.forEach(pos => {
         const pillar = new THREE.Mesh(wallGeo, wallMat);
@@ -180,7 +182,6 @@
         wallBoxes.push(new THREE.Box3().setFromObject(pillar));
     });
 
-    // 바닥
     const floor = new THREE.Mesh(
         new THREE.PlaneGeometry(mapSize, mapSize),
         new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.8 })
@@ -188,38 +189,39 @@
     floor.rotation.x = -Math.PI / 2;
     scene.add(floor);
 
-    // 4. 퀴즈 상자 3개 생성
+    // 상자 생성
     const chestPositions = [[-12, 1, 0], [0, 1, -12], [12, 1, 0]];
     chestPositions.forEach((pos, idx) => {
         const chestGeo = new THREE.BoxGeometry(1.5, 1.5, 1.5);
         const chestMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xd97706 });
         const chest = new THREE.Mesh(chestGeo, chestMat);
         chest.position.set(pos[0], pos[1], pos[2]);
-        chest.userData = { id: idx, opened: false, cooldown: false };
+        chest.userData = { id: idx, opened: false };
         scene.add(chest);
         chestMeshes.push(chest);
     });
 
-    // 5. 탈출 게이트
+    // 게이트
     const gateGeo = new THREE.TorusGeometry(1.5, 0.4, 16, 100);
     const gateMat = new THREE.MeshStandardMaterial({ color: 0x10b981, emissive: 0x059669 });
     const gate = new THREE.Mesh(gateGeo, gateMat);
     gate.position.set(0, 2, 15);
     scene.add(gate);
 
-    // 6. 추격자 AI
+    // 추격자 적
     const enemyGeo = new THREE.SphereGeometry(1.2, 32, 32);
     const enemyMat = new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0x991b1b });
     const enemy = new THREE.Mesh(enemyGeo, enemyMat);
     enemy.position.set(0, 1.2, -15);
     scene.add(enemy);
 
-    // 7. 게임 상태 변수
+    // 상태 관리 변수
     let hp = 100;
     let gameStarted = false;
     let isGameOver = false;
     let inModal = false;
-    let currentChest = null;
+    let nearbyTarget = null; // 현재 근처에 있는 오브젝트 ('chest' 또는 'gate')
+    let currentChestTarget = null;
 
     let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
     let moveVector = { x: 0, y: 0 };
@@ -238,6 +240,8 @@
         gameStarted = false;
         isGameOver = false;
         inModal = false;
+        nearbyTarget = null;
+        document.getElementById('interact-prompt').style.display = 'none';
 
         camera.position.set(0, 1.6, 0);
         camera.rotation.set(0, 0, 0);
@@ -245,7 +249,6 @@
 
         chestMeshes.forEach(c => {
             c.userData.opened = false;
-            c.userData.cooldown = false;
             c.material.color.setHex(0xf59e0b);
         });
     }
@@ -263,13 +266,21 @@
     startBtn.addEventListener('click', onStartMission);
     startBtn.addEventListener('touchstart', onStartMission);
 
-    // 8. 퀴즈 & 모달 처리 로직 (오류 해결 핵심 구역)
-    function openQuiz(chest) {
-        if (inModal || chest.userData.opened || chest.userData.cooldown) return;
-        inModal = true;
-        currentChest = chest;
-        resetMovementState();
+    // 상호작용 트리거 (버튼 클릭 또는 E키)
+    function triggerNearbyInteraction() {
+        if (!gameStarted || isGameOver || inModal || !nearbyTarget) return;
 
+        if (nearbyTarget.type === 'chest') {
+            openQuiz(nearbyTarget.object);
+        } else if (nearbyTarget.type === 'gate') {
+            openGateModal();
+        }
+    }
+
+    function openQuiz(chest) {
+        inModal = true;
+        currentChestTarget = chest;
+        resetMovementState();
         if (document.pointerLockElement) document.exitPointerLock();
 
         const qData = quizzes[chest.userData.id];
@@ -289,23 +300,18 @@
     }
 
     function checkAnswer(selectedIdx) {
-        const qData = quizzes[currentChest.userData.id];
+        const qData = quizzes[currentChestTarget.userData.id];
         if (selectedIdx === qData.ans) {
             alert(`정답입니다! 암호 코드 [ ${qData.code} ] 를 획득했습니다.`);
-            collectedCodes[currentChest.userData.id] = qData.code;
+            collectedCodes[currentChestTarget.userData.id] = qData.code;
             updateCodeDisplay();
-            currentChest.userData.opened = true;
-            currentChest.material.color.setHex(0x475569);
+            currentChestTarget.userData.opened = true;
+            currentChestTarget.material.color.setHex(0x475569);
         } else {
             alert("오답입니다! 지질막 내구도가 15% 감소합니다.");
             hp -= 15;
             document.getElementById('hp').innerText = Math.max(0, hp) + '%';
-            
-            // 쿨타임 적용 (잠시 재오픈 방지)
-            currentChest.userData.cooldown = true;
-            setTimeout(() => { if (currentChest) currentChest.userData.cooldown = false; }, 3000);
         }
-
         closeModal('quiz-modal');
     }
 
@@ -314,9 +320,7 @@
             `[ ${collectedCodes[0]} ] [ ${collectedCodes[1]} ] [ ${collectedCodes[2]} ]`;
     }
 
-    let gateCooldown = false;
     function openGateModal() {
-        if (inModal || gateCooldown) return;
         inModal = true;
         resetMovementState();
         if (document.pointerLockElement) document.exitPointerLock();
@@ -340,11 +344,6 @@
         inModal = false;
         resetMovementState();
 
-        if (id === 'gate-modal') {
-            gateCooldown = true;
-            setTimeout(() => { gateCooldown = false; }, 3000);
-        }
-
         if (!isTouchDevice && gameStarted && !isGameOver) {
             document.body.requestPointerLock();
         }
@@ -358,8 +357,9 @@
         cameraTouchId = null;
     }
 
-    // 9. 키보드 & 마우스 조작 이벤트
+    // 키보드 이벤트 (WASD + E 키 상호작용)
     document.addEventListener('keydown', (e) => {
+        if (e.code === 'KeyE') triggerNearbyInteraction();
         if (inModal) return;
         if (e.code === 'KeyW' || e.code === 'ArrowUp') moveForward = true;
         if (e.code === 'KeyS' || e.code === 'ArrowDown') moveBackward = true;
@@ -374,22 +374,13 @@
         if (e.code === 'KeyD' || e.code === 'ArrowRight') moveRight = false;
     });
 
-    // 화면 조작 (PC 마우스)
-    document.body.addEventListener('click', () => {
-        if (gameStarted && !isGameOver && !inModal && !isTouchDevice) {
-            if (document.pointerLockElement !== document.body) {
-                document.body.requestPointerLock();
-            }
-        }
-    });
-
     document.addEventListener('mousemove', (e) => {
         if (document.pointerLockElement === document.body && !isGameOver && gameStarted && !inModal) {
             camera.rotation.y -= e.movementX * 0.0025;
         }
     });
 
-    // 10. 모바일 터치 처리 (조이스틱 & 화면 드래그 보강)
+    // 모바일 터치 이벤트 (사파리/크롬 호환 핑거 트래킹)
     const zone = document.getElementById('joystick-zone');
     const knob = document.getElementById('joystick-knob');
     let joystickTouchId = null;
@@ -463,7 +454,6 @@
         moveVector = { x: dx / maxRadius, y: dy / maxRadius };
     }
 
-    // 11. 벽 충돌 검사
     function checkWallCollision(nextPos) {
         const playerRadius = 0.6;
         const playerBox = new THREE.Box3(
@@ -476,7 +466,7 @@
         return false;
     }
 
-    // 12. 메인 애니메이션 루프
+    // 프레임 루프
     const speed = 0.09;
     const enemySpeed = 0.025;
 
@@ -512,25 +502,35 @@
                 if (!checkWallCollision(nextZ)) camera.position.z = targetPos.z;
             }
 
-            // 추격자 AI 이동
+            // 추격자 이동
             const enemyDir = new THREE.Vector3().subVectors(camera.position, enemy.position);
             enemyDir.y = 0; enemyDir.normalize();
             enemy.position.addScaledVector(enemyDir, enemySpeed);
 
-            // 상자 상호작용 감지
+            // 근처 상자/게이트 감지 및 버튼 감지
+            let foundTarget = null;
+
             chestMeshes.forEach(chest => {
                 chest.rotation.y += 0.01;
-                if (!chest.userData.opened && !chest.userData.cooldown && camera.position.distanceTo(chest.position) < 2.2) {
-                    openQuiz(chest);
+                if (!chest.userData.opened && camera.position.distanceTo(chest.position) < 2.5) {
+                    foundTarget = { type: 'chest', object: chest };
                 }
             });
 
-            // 탈출 게이트 감지
-            if (!gateCooldown && camera.position.distanceTo(gate.position) < 2.5) {
-                openGateModal();
+            if (!foundTarget && camera.position.distanceTo(gate.position) < 3.0) {
+                foundTarget = { type: 'gate', object: gate };
             }
 
-            // 피격 판정
+            nearbyTarget = foundTarget;
+            const promptBtn = document.getElementById('interact-prompt');
+            if (nearbyTarget) {
+                promptBtn.style.display = 'block';
+                promptBtn.innerText = nearbyTarget.type === 'chest' ? '[ 상자 열기 ]' : '[ 게이트 암호 입력 ]';
+            } else {
+                promptBtn.style.display = 'none';
+            }
+
+            // 피격 감지
             if (camera.position.distanceTo(enemy.position) < 1.6) {
                 hp -= 1;
                 document.getElementById('hp').innerText = Math.max(0, hp) + '%';
