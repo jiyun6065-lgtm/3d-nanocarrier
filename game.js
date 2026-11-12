@@ -1,7 +1,7 @@
 // 1. Scene & Lighting 설정
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x1e293b);
-scene.fog = new THREE.FogExp2(0x1e293b, 0.015);
+scene.fog = new THREE.FogExp2(0x1e293b, 0.014);
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -10,13 +10,13 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 document.body.appendChild(renderer.domElement);
 
 // 플레이어 개인 등불 및 환경 조명
-const playerLight = new THREE.PointLight(0xffedd5, 1.2, 18);
+const playerLight = new THREE.PointLight(0xffedd5, 1.3, 20);
 camera.add(playerLight);
 scene.add(camera);
 
-scene.add(new THREE.AmbientLight(0x94a3b8, 1.2));
+scene.add(new THREE.AmbientLight(0x94a3b8, 1.3));
 const dirLight = new THREE.DirectionalLight(0xfbbf24, 0.6);
-dirLight.position.set(10, 20, 10);
+dirLight.position.set(10, 25, 10);
 scene.add(dirLight);
 
 // 돌 텍스처 생성
@@ -51,7 +51,7 @@ const stoneTexture = createStoneTexture();
 
 // 횃불 조명 추가 함수
 function addTorch(x, y, z, color = 0xf59e0b) {
-    const torchLight = new THREE.PointLight(color, 2.0, 15);
+    const torchLight = new THREE.PointLight(color, 2.2, 16);
     torchLight.position.set(x, y, z);
     scene.add(torchLight);
 
@@ -61,7 +61,7 @@ function addTorch(x, y, z, color = 0xf59e0b) {
     torchMesh.position.set(x, y - 0.2, z);
     scene.add(torchMesh);
 
-    const flameGeo = new THREE.SphereGeometry(0.2, 8, 8);
+    const flameGeo = new THREE.SphereGeometry(0.22, 8, 8);
     const flameMat = new THREE.MeshBasicMaterial({ color: color });
     const flameMesh = new THREE.Mesh(flameGeo, flameMat);
     flameMesh.position.set(x, y + 0.2, z);
@@ -79,7 +79,7 @@ let collectedCodes = ["_", "_", "_"];
 const wallBoxes = [];
 const chestMeshes = [];
 
-// 3. 맵 지형 및 방 구획 생성
+// 3. 도면(image_c112f8) 기반 맵 지형 및 방 구획 생성
 const wallMat = new THREE.MeshStandardMaterial({ map: stoneTexture, roughness: 0.6 });
 const floorMat = new THREE.MeshStandardMaterial({ map: stoneTexture, roughness: 0.5 });
 const woodMat = new THREE.MeshStandardMaterial({ color: 0x92400e, roughness: 0.7 });
@@ -92,53 +92,109 @@ function createWall(w, h, d, x, y, z) {
     return mesh;
 }
 
-// 외곽 벽
-createWall(40, 6, 1, 0, 3, -20);
-createWall(40, 6, 1, 0, 3, 20);
-createWall(1, 6, 40, -20, 3, 0);
-createWall(1, 6, 40, 20, 3, 0);
+function createFloor(w, d, x, y, z) {
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, 0.2, d), floorMat);
+    mesh.position.set(x, y - 0.1, z);
+    scene.add(mesh);
+}
 
-// 바닥
-const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), floorMat);
-floor.rotation.x = -Math.PI / 2;
-scene.add(floor);
+// [중앙 홀: X: -10 ~ 10, Z: -10 ~ 10]
+createFloor(20, 20, 0, 0, 0);
+addTorch(-8, 4, -8, 0xf59e0b);
+addTorch(8, 4, -8, 0xf59e0b);
+addTorch(-8, 4, 8, 0xf59e0b);
+addTorch(8, 4, 8, 0xf59e0b);
 
-// 3개 독립 방 구획
-createWall(14, 6, 0.8, -13, 3, 2);
-createWall(0.8, 6, 10, -6, 3, 13);
-addTorch(-13, 4, 17, 0xf59e0b);
+// 홀 북쪽 벽 (2층 올라가는 계단 중앙 4칸 개방)
+createWall(8, 7, 1, -6, 3.5, -10);
+createWall(8, 7, 1, 6, 3.5, -10);
 
-createWall(14, 6, 0.8, 13, 3, 2);
-createWall(0.8, 6, 10, 6, 3, 13);
-addTorch(13, 4, 17, 0xf59e0b);
+// 홀 서쪽 벽 (Room 1 연결 통로 Z: -2 ~ 2 개방)
+createWall(1, 6, 8, -10, 3, -6);
+createWall(1, 6, 8, -10, 3, 6);
 
-createWall(6, 6, 0.8, -10, 3, -6);
-createWall(6, 6, 0.8, 10, 3, -6);
-addTorch(0, 4, -17, 0x38bdf8);
+// 홀 동쪽 벽 (Room 3 연결 통로 Z: -2 ~ 2 개방)
+createWall(1, 6, 8, 10, 3, -6);
+createWall(1, 6, 8, 10, 3, 6);
 
-// 2층 테라스 & 계단
-createWall(38, 0.5, 8, 0, 3.5, -15);
+// 홀 남쪽 벽 (Room 2 연결 통로 X: -2 ~ 2 개방)
+createWall(8, 6, 1, -6, 3, 10);
+createWall(8, 6, 1, 6, 3, 10);
+
+// [Room 1 - 서쪽 방: 복도 X: -14 ~ -10, 방 X: -22 ~ -14, Z: -6 ~ 6]
+createFloor(4, 4, -12, 0, 0); // 복도 바닥
+createWall(4, 6, 0.8, -12, 3, -2); // 복도 북벽
+createWall(4, 6, 0.8, -12, 3, 2);  // 복도 남벽
+
+createFloor(8, 12, -18, 0, 0); // 방 바닥
+createWall(8, 6, 0.8, -18, 3, -6); // 방 북벽
+createWall(8, 6, 0.8, -18, 3, 6);  // 방 남벽
+createWall(0.8, 6, 12, -22, 3, 0); // 방 서벽
+createWall(0.8, 6, 4, -14, 3, -4); // 방 동벽 상단
+createWall(0.8, 6, 4, -14, 3, 4);  // 방 동벽 하단
+addTorch(-20, 4, 0, 0xf59e0b);
+
+// [Room 2 - 남쪽 방: 복도 Z: 10 ~ 14, 방 X: -6 ~ 6, Z: 14 ~ 22]
+createFloor(4, 4, 0, 0, 12); // 복도 바닥
+createWall(0.8, 6, 4, -2, 3, 12); // 복도 서벽
+createWall(0.8, 6, 4, 2, 3, 12);  // 복도 동벽
+
+createFloor(12, 8, 0, 0, 18); // 방 바닥
+createWall(4, 6, 0.8, -4, 3, 14);  // 방 북벽 좌측
+createWall(4, 6, 0.8, 4, 3, 14);   // 방 북벽 우측
+createWall(12, 6, 0.8, 0, 3, 22);  // 방 남벽
+createWall(0.8, 6, 8, -6, 3, 18);  // 방 서벽
+createWall(0.8, 6, 8, 6, 3, 18);   // 방 동벽
+addTorch(0, 4, 20, 0xf59e0b);
+
+// [Room 3 - 동쪽 방: 복도 X: 10 ~ 14, 방 X: 14 ~ 22, Z: -6 ~ 6]
+createFloor(4, 4, 12, 0, 0); // 복도 바닥
+createWall(4, 6, 0.8, 12, 3, -2); // 복도 북벽
+createWall(4, 6, 0.8, 12, 3, 2);  // 복도 남벽
+
+createFloor(8, 12, 18, 0, 0); // 방 바닥
+createWall(8, 6, 0.8, 18, 3, -6); // 방 북벽
+createWall(8, 6, 0.8, 18, 3, 6);  // 방 남벽
+createWall(0.8, 6, 12, 22, 3, 0); // 방 동벽
+createWall(0.8, 6, 4, 14, 3, -4); // 방 서벽 상단
+createWall(0.8, 6, 4, 14, 3, 4);  // 방 서벽 하단
+addTorch(20, 4, 0, 0xf59e0b);
+
+// [북쪽 2층 테라스 & 계단: Z: -10 ~ -15 계단, Z: -15 ~ -22 2층 바닥]
+createWall(24, 0.5, 8, 0, 3.25, -18.5); // 2층 바닥 (윗면 높이 Y=3.5)
+createWall(24, 4, 0.8, 0, 5.5, -22.5);  // 2층 북쪽 외벽
+createWall(0.8, 4, 8, -12, 5.5, -18.5); // 2층 서쪽 외벽
+createWall(0.8, 4, 8, 12, 5.5, -18.5);  // 2층 동쪽 외벽
+addTorch(-8, 6.5, -21, 0x38bdf8);
+addTorch(8, 6.5, -21, 0x38bdf8);
+
+// 계단 디딤판 생성 (시각적 계단)
 for (let i = 0; i < 8; i++) {
-    const stepGeo = new THREE.BoxGeometry(5, 0.45, 0.8);
+    const stepGeo = new THREE.BoxGeometry(4, 0.45, 0.65);
     const step = new THREE.Mesh(stepGeo, wallMat);
-    step.position.set(0, (i * 0.45) + 0.2, -6.5 - (i * 0.75));
+    step.position.set(0, (i * 0.43) + 0.2, -10.2 - (i * 0.62));
     scene.add(step);
 }
 
-// 받침대 및 상자 배치
+// 각 방안의 받침대(책상) 및 암호 상자 배치
 function createDesk(x, z) {
-    const desk = new THREE.Mesh(new THREE.BoxGeometry(2.5, 1, 2), woodMat);
+    const desk = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1, 2.2), woodMat);
     desk.position.set(x, 0.5, z);
     scene.add(desk);
     wallBoxes.push(new THREE.Box3().setFromObject(desk));
 }
-createDesk(-13, 13);
-createDesk(13, 13);
-createDesk(0, -14);
+createDesk(-19, 0); // Room 1 받침대
+createDesk(0, 19);  // Room 2 받침대
+createDesk(19, 0);  // Room 3 받침대
 
-const chestPositions = [[-13, 1.6, 13], [13, 1.6, 13], [0, 1.6, -14]];
+const chestPositions = [
+    [-19, 1.5, 0], // Room 1 상자
+    [0, 1.5, 19],  // Room 2 상자
+    [19, 1.5, 0]   // Room 3 상자
+];
+
 chestPositions.forEach((pos, idx) => {
-    const chestGeo = new THREE.BoxGeometry(1.2, 1, 1);
+    const chestGeo = new THREE.BoxGeometry(1.1, 0.9, 0.9);
     const chestMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xb45309 });
     const chest = new THREE.Mesh(chestGeo, chestMat);
     chest.position.set(pos[0], pos[1], pos[2]);
@@ -147,18 +203,18 @@ chestPositions.forEach((pos, idx) => {
     chestMeshes.push(chest);
 });
 
-// 게이트
+// 최종 탈출 게이트 (2층 북쪽 중앙)
 const gateGeo = new THREE.TorusGeometry(1.5, 0.3, 16, 100);
 const gateMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0284c7 });
 const gate = new THREE.Mesh(gateGeo, gateMat);
-gate.position.set(0, 5.2, -17.5);
+gate.position.set(0, 5.2, -21);
 scene.add(gate);
 
-// 추격자 AI
-const enemyGeo = new THREE.SphereGeometry(1.2, 32, 32);
+// 추격자 AI (리소좀)
+const enemyGeo = new THREE.SphereGeometry(1.1, 32, 32);
 const enemyMat = new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0x991b1b });
 const enemy = new THREE.Mesh(enemyGeo, enemyMat);
-enemy.position.set(0, 1.2, 8);
+enemy.position.set(0, 1.1, -6);
 scene.add(enemy);
 
 // 4. 게임 상태 및 조작 변수
@@ -219,9 +275,12 @@ function resetGamePosition() {
     const promptEl = document.getElementById('interact-prompt');
     if (promptEl) promptEl.style.display = 'none';
 
-    camera.position.set(0, 1.6, 0);
+    // 플레이어 홀 중앙 남쪽 시작
+    camera.position.set(0, 1.6, 5);
     camera.rotation.set(0, 0, 0);
-    enemy.position.set(0, 1.2, 8);
+    
+    // 추격자 홀 북쪽 시작
+    enemy.position.set(0, 1.1, -6);
 
     chestMeshes.forEach(c => {
         c.userData.opened = false;
@@ -426,8 +485,8 @@ function checkWallCollision(nextPos) {
 }
 
 // 7. 메인 게임 루프
-const speed = 0.09;
-const enemySpeed = 0.024;
+const speed = 0.095;
+const enemySpeed = 0.032;
 
 function animate() {
     requestAnimationFrame(animate);
@@ -461,26 +520,40 @@ function animate() {
             if (!checkWallCollision(nextZ)) camera.position.z = targetPos.z;
         }
 
-        // 계단 자동 오르기/내리기
-        if (camera.position.z <= -6.0 && camera.position.z >= -12.5 && Math.abs(camera.position.x) <= 2.8) {
-            const progress = (-6.0 - camera.position.z) / 6.5;
+        // 계단 자동 오르기/내리기 (Z: -10 ~ -15 구간)
+        if (camera.position.z <= -10.0 && camera.position.z >= -15.0 && Math.abs(camera.position.x) <= 2.2) {
+            const progress = (-10.0 - camera.position.z) / 5.0;
             camera.position.y = 1.6 + (progress * 3.5);
-        } else if (camera.position.z < -12.5) {
-            camera.position.y = 5.1;
+        } else if (camera.position.z < -15.0) {
+            camera.position.y = 5.1; // 2층 바닥 높이
         } else {
-            camera.position.y = 1.6;
+            camera.position.y = 1.6; // 1층 홀/방 바닥 높이
         }
 
-        // 추격자 이동
-        const enemyDir = new THREE.Vector3().subVectors(camera.position, enemy.position);
-        enemyDir.y = 0; enemyDir.normalize();
-        enemy.position.addScaledVector(enemyDir, enemySpeed);
-        enemy.position.y = camera.position.y - 0.4;
+        // --- 추격자 AI 이동 (홀 구역 X: -8.5 ~ 8.5, Z: -8.5 ~ 8.5 내부로 엄격 제한) ---
+        const isPlayerInHall = (Math.abs(camera.position.x) <= 9.2 && Math.abs(camera.position.z) <= 9.2 && camera.position.y < 2.5);
+        
+        // 플레이어가 홀에 있으면 플레이어 추적, 방이나 2층으로 피신하면 홀 중앙(0, 0)으로 복귀 순찰
+        const targetX = isPlayerInHall ? camera.position.x : 0;
+        const targetZ = isPlayerInHall ? camera.position.z : 0;
+        const targetVec = new THREE.Vector3(targetX, 1.1, targetZ);
+
+        if (enemy.position.distanceTo(targetVec) > 0.3) {
+            const enemyDir = new THREE.Vector3().subVectors(targetVec, enemy.position);
+            enemyDir.y = 0;
+            enemyDir.normalize();
+            enemy.position.addScaledVector(enemyDir, enemySpeed);
+        }
+
+        // 추격자 좌표가 홀 경계를 절대 벗어나지 않도록 강제 클램핑
+        enemy.position.x = Math.max(-8.5, Math.min(8.5, enemy.position.x));
+        enemy.position.z = Math.max(-8.5, Math.min(8.5, enemy.position.z));
+        enemy.position.y = 1.1;
 
         // 상호작용 대상 감지
         let foundTarget = null;
         chestMeshes.forEach(chest => {
-            chest.rotation.y += 0.01;
+            chest.rotation.y += 0.015;
             if (!chest.userData.opened && camera.position.distanceTo(chest.position) < 2.8) {
                 foundTarget = { type: 'chest', object: chest };
             }
@@ -499,7 +572,7 @@ function animate() {
             promptBtn.style.display = 'none';
         }
 
-        // 피격 판정
+        // 피격 판정 (추격자와 접촉 시)
         if (camera.position.distanceTo(enemy.position) < 1.6) {
             hp -= 1;
             document.getElementById('hp').innerText = Math.max(0, hp) + '%';
