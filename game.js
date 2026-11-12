@@ -907,16 +907,17 @@ function gameFailed() {
     resetMovementState();
     if (document.pointerLockElement) document.exitPointerLock();
 
-    const msg = document.getElementById('message-text');
-    msg.innerHTML = "<span style='color:#ef4444;'>분해 효소에 잡혔습니다 (던전 탈출 실패)</span>";
-    msg.style.display = 'block';
+    const promptBtn = document.getElementById('interact-prompt');
+    if (promptBtn) promptBtn.style.display = 'none';
 
-    setTimeout(() => {
-        msg.style.display = 'none';
-        document.getElementById('start-screen').style.display = 'flex';
-        resetGamePosition();
-    }, 3000);
+    const defeatOverlay = document.getElementById('defeat-overlay');
+    if (defeatOverlay) {
+        defeatOverlay.style.display = 'flex';
+    }
 }
+
+
+
 
 function gameSuccess() {
     if (isGameOver) return;
@@ -935,10 +936,22 @@ function gameSuccess() {
     }, 3000);
 }
 
-window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-});
+
+
+window.returnToTitleFromDefeat = function(e) {
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    const defeatOverlay = document.getElementById('defeat-overlay');
+    if (defeatOverlay) {
+        defeatOverlay.style.display = 'none';
+    }
+    const startScreen = document.getElementById('start-screen');
+    if (startScreen) {
+        startScreen.style.display = 'flex';
+    }
+    resetGamePosition();
+};
 
 animate();
