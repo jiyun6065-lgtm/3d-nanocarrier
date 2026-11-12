@@ -27,12 +27,10 @@
         </div>
     </div>
 
-    <!-- 시작 화면 (Dragon's Dogma 비율 + 기존 컬러 + 세포 던전 테마 배경) -->
+    <!-- 시작 화면 -->
     <div id="start-screen" class="overlay-screen">
-        <!-- 기본 배경 및 안개/포자 -->
         <div class="mist-bg"></div>
         
-        <!-- 주제 맞춤형 세포 연구소 던전 실루엣 & 나노캐리어 아트워크 배경 -->
         <svg class="theme-backdrop" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
             <defs>
                 <radialGradient id="coreGlow" cx="50%" cy="46%" r="38%">
@@ -46,28 +44,21 @@
                 </linearGradient>
             </defs>
 
-            <!-- 중앙 빛무리 -->
             <rect width="1600" height="900" fill="url(#coreGlow)"/>
-
-            <!-- 원경 던전 석조 아치 & 기둥 실루엣 -->
             <path d="M 0,900 L 0,120 L 240,120 L 240,900 Z" fill="url(#archGrad)"/>
             <path d="M 1360,900 L 1360,120 L 1600,120 L 1600,900 Z" fill="url(#archGrad)"/>
             <path d="M 240,260 Q 800,40 1360,260 L 1360,0 L 240,0 Z" fill="#050a0d" opacity="0.92"/>
             
-            <!-- 좌우 중경 던전 기둥 -->
             <rect x="330" y="180" width="75" height="720" fill="#070e12" opacity="0.85"/>
             <rect x="1195" y="180" width="75" height="720" fill="#070e12" opacity="0.85"/>
 
-            <!-- 중앙 제단 & 표적 수용체 링 실루엣 (Dragon's Dogma 중앙 동상 구도 오마주) -->
             <polygon points="620,900 670,740 930,740 980,900" fill="#070f13"/>
             <rect x="700" y="690" width="200" height="50" fill="#091318"/>
             
-            <!-- 표적 수용체 게이트 & 나노캐리어 이중막 궤도 -->
             <circle cx="800" cy="430" r="165" fill="none" stroke="#2dd4bf" stroke-width="2" stroke-dasharray="14 10" opacity="0.28"/>
             <circle cx="800" cy="430" r="135" fill="none" stroke="#94a3b8" stroke-width="1.5" opacity="0.22"/>
             <circle cx="800" cy="430" r="95" fill="none" stroke="#2dd4bf" stroke-width="3" opacity="0.2"/>
             
-            <!-- 수용체 결합 돌기 (Y자형 리간드 실루엣) -->
             <g stroke="#2dd4bf" stroke-width="2.5" opacity="0.3" fill="none">
                 <line x1="800" y1="265" x2="800" y2="235"/><polyline points="785,220 800,235 815,220"/>
                 <line x1="800" y1="595" x2="800" y2="625"/><polyline points="785,640 800,625 815,640"/>
@@ -75,7 +66,6 @@
                 <line x1="965" y1="430" x2="995" y2="430"/><polyline points="1010,415 995,430 1010,445"/>
             </g>
 
-            <!-- 부유하는 세포/나노 입자들 -->
             <g fill="#2dd4bf" opacity="0.45">
                 <circle cx="480" cy="310" r="4"/>
                 <circle cx="520" cy="540" r="3"/>
@@ -85,7 +75,6 @@
                 <circle cx="940" cy="250" r="3"/>
             </g>
 
-            <!-- 바닥 석조 타일 원근선 -->
             <g stroke="#1e293b" stroke-width="1.5" opacity="0.55">
                 <line x1="0" y1="810" x2="1600" y2="810"/>
                 <line x1="0" y1="855" x2="1600" y2="855"/>
@@ -100,19 +89,16 @@
         <div class="spores-right"></div>
         <div class="vignette"></div>
 
-        <!-- 화면 중앙을 가로지르는 타이틀 로고 (Dragon's Dogma 비율) -->
         <div class="center-hero-group">
             <div class="title-sub">DUNGEON LAB ESCAPE</div>
             <h1 class="rune-title">NANOCARRIER</h1>
         </div>
 
-        <!-- 타이틀 아래 심플한 텍스트형 START 버튼 영역 -->
         <div class="clean-action-area">
-            <button id="start-btn" class="clean-start-btn">START GAME</button>
+            <button type="button" id="start-btn" class="clean-start-btn" onclick="startGameNow()">START GAME</button>
             <button type="button" class="clean-sub-btn" onclick="toggleGuideModal(true)">MISSION BRIEFING</button>
         </div>
 
-        <!-- 임무 브리핑 팝업 -->
         <div id="briefing-box" class="briefing-panel" style="display: none;">
             <h3>[ 세포 연구소 던전 탈출 수칙 ]</h3>
             <p>1. 중앙 홀을 배회하는 <strong>분해 효소(리소좀)</strong>를 피해 3개의 방을 탐색하세요.</p>
@@ -122,7 +108,7 @@
         </div>
 
         <div class="bottom-brand">CELLULAR LAB EDITION</div>
-        <div class="version-tag">v1.0.4</div>
+        <div class="version-tag">v1.0.5</div>
     </div>
 
     <div id="quiz-modal" class="modal">
