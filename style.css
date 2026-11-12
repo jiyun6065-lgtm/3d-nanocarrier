@@ -353,7 +353,7 @@ html, body {
 }
 
 /* =========================================================
-   리그 오브 레전드 스타일 '패배' 크레스트 배너 오버레이
+   리그 오브 레전드 스타일 '패배' & '승리' 크레스트 배너 오버레이
    ========================================================= */
 .crest-overlay {
     position: fixed;
@@ -388,7 +388,6 @@ html, body {
     100% { transform: scale(1); opacity: 1; }
 }
 
-/* 배너 위아래로 피어오르는 붉은 마법 불꽃 오라 */
 .crest-aura {
     position: absolute;
     top: 4%;
@@ -407,6 +406,14 @@ html, body {
     animation: auraFlame 2.2s ease-in-out infinite alternate;
 }
 
+.victory-aura {
+    background: radial-gradient(ellipse at 50% 50%,
+        rgba(56, 189, 248, 0.9) 0%,
+        rgba(14, 165, 233, 0.55) 38%,
+        rgba(2, 132, 199, 0.22) 65%,
+        transparent 80%) !important;
+}
+
 @keyframes auraFlame {
     0% { transform: translateX(-50%) scaleY(0.95) scaleX(0.96); opacity: 0.8; }
     100% { transform: translateX(-50%) scaleY(1.08) scaleX(1.04); opacity: 1; }
@@ -421,7 +428,6 @@ html, body {
     pointer-events: none;
 }
 
-/* 중앙 '패배' 텍스트 영역 */
 .crest-text-box {
     position: absolute;
     top: 49%;
@@ -455,7 +461,10 @@ html, body {
     letter-spacing: 0.5px;
 }
 
-/* 배너 하단 중앙에 걸치는 '계속' 버튼 */
+.victory-sub {
+    color: #7dd3fc !important;
+}
+
 .crest-continue-btn {
     position: absolute;
     bottom: 24.5%;
