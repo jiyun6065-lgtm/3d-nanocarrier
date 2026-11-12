@@ -1,7 +1,7 @@
 // 1. Scene & Lighting 설정
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x1e293b);
-scene.fog = new THREE.FogExp2(0x1e293b, 0.005);
+scene.fog = new THREE.FogExp2(0x1e293b, 0.005); // 대폭 확장된 맵에 맞춰 안개 거리 완화
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -558,9 +558,9 @@ function checkWallCollision(nextPos) {
     return false;
 }
 
-// 7. 메인 게임 루프
-const speed = 0.30;
-const enemySpeed = 0.13;
+// 7. 메인 게임 루프 (플레이어 및 추격자 속도 대폭 상향)
+const speed = 0.30;       // 플레이어 이동 속도 상향 (0.22 -> 0.30)
+const enemySpeed = 0.13;  // 추격자 이동 속도 균형 조정 (0.095 -> 0.13)
 const clock = new THREE.Clock();
 
 function animate() {
@@ -609,12 +609,12 @@ function animate() {
             const progress = (-25.0 - camera.position.z) / 12.5;
             camera.position.y = 2.1 + (progress * 5.8);
         } else if (camera.position.z < -37.5) {
-            camera.position.y = 7.9;
+            camera.position.y = 7.9; // 확장된 2층 테라스 시점 높이
         } else {
-            camera.position.y = 2.1;
+            camera.position.y = 2.1; // 1층 홀/방 시점 높이
         }
 
-        // 추격자 AI 이동 (홀 구역 X: -22.5 ~ 22.5, Z: -22.5 ~ 22.5 내부로 제한)
+        // 추격자 AI 이동 (확장된 홀 구역 X: -22.5 ~ 22.5, Z: -22.5 ~ 22.5 내부로 제한)
         const isPlayerInHall = (Math.abs(camera.position.x) <= 23.5 && Math.abs(camera.position.z) <= 23.5 && camera.position.y < 3.0);
         
         const targetX = isPlayerInHall ? camera.position.x : 0;
