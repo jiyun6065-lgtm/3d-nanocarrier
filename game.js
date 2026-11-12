@@ -1,7 +1,7 @@
-// 1. Scene & Lighting (적절한 명도의 분위기 있는 라이팅)
+// 1. Scene & Lighting 설정
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x1e293b);
-scene.fog = new THREE.FogExp2(0x1e293b, 0.015); // 적절한 안개감 복원
+scene.fog = new THREE.FogExp2(0x1e293b, 0.015);
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -9,12 +9,11 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 document.body.appendChild(renderer.domElement);
 
-// 플레이어 등불
+// 플레이어 개인 등불 및 환경 조명
 const playerLight = new THREE.PointLight(0xffedd5, 1.2, 18);
 camera.add(playerLight);
 scene.add(camera);
 
-// 전체 환경 조명 (너무 밝지 않게 조절)
 scene.add(new THREE.AmbientLight(0x94a3b8, 1.2));
 const dirLight = new THREE.DirectionalLight(0xfbbf24, 0.6);
 dirLight.position.set(10, 20, 10);
@@ -50,7 +49,7 @@ function createStoneTexture() {
 
 const stoneTexture = createStoneTexture();
 
-// 횃불 조명
+// 횃불 조명 추가 함수
 function addTorch(x, y, z, color = 0xf59e0b) {
     const torchLight = new THREE.PointLight(color, 2.0, 15);
     torchLight.position.set(x, y, z);
@@ -78,10 +77,9 @@ const quizzes = [
 
 let collectedCodes = ["_", "_", "_"];
 const wallBoxes = [];
-const stairsBoxes = []; // 계단 구역 감지용 박스
 const chestMeshes = [];
 
-// 3. 지형 및 방 구획
+// 3. 맵 지형 및 방 구획 생성
 const wallMat = new THREE.MeshStandardMaterial({ map: stoneTexture, roughness: 0.6 });
 const floorMat = new THREE.MeshStandardMaterial({ map: stoneTexture, roughness: 0.5 });
 const woodMat = new THREE.MeshStandardMaterial({ color: 0x92400e, roughness: 0.7 });
@@ -118,10 +116,8 @@ createWall(6, 6, 0.8, -10, 3, -6);
 createWall(6, 6, 0.8, 10, 3, -6);
 addTorch(0, 4, -17, 0x38bdf8);
 
-// 2층 테라스 & 자동 오르기 계단 설계
+// 2층 테라스 & 계단
 createWall(38, 0.5, 8, 0, 3.5, -15);
-
-// 계단 디딤판 생성 (자동 오르기 충돌 적용)
 for (let i = 0; i < 8; i++) {
     const stepGeo = new THREE.BoxGeometry(5, 0.45, 0.8);
     const step = new THREE.Mesh(stepGeo, wallMat);
@@ -129,7 +125,7 @@ for (let i = 0; i < 8; i++) {
     scene.add(step);
 }
 
-// 각 방 받침대 및 상자 배치
+// 받침대 및 상자 배치
 function createDesk(x, z) {
     const desk = new THREE.Mesh(new THREE.BoxGeometry(2.5, 1, 2), woodMat);
     desk.position.set(x, 0.5, z);
@@ -162,10 +158,10 @@ scene.add(gate);
 const enemyGeo = new THREE.SphereGeometry(1.2, 32, 32);
 const enemyMat = new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0x991b1b });
 const enemy = new THREE.Mesh(enemyGeo, enemyMat);
-enemy.position.set(0, 1.2, 0);
+enemy.position.set(0, 1.2, 8);
 scene.add(enemy);
 
-// 4. 상태 관리 변수
+// 4. 게임 상태 및 조작 변수
 let hp = 100;
 let gameStarted = false;
 let isGameOver = false;
@@ -178,57 +174,85 @@ let moveVector = { x: 0, y: 0 };
 
 const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 const joystickWrapper = document.getElementById('joystick-wrapper');
-if (isTouchDevice) joystickWrapper.style.display = 'block';
+if (isTouchDevice && joystickWrapper) {
+    joystickWrapper.style.display = 'block';
+}
 
-// 1. 버튼 및 시작 화면 요소 가져오기
+const zone = document.getElementById('joystick-zone');
+const knob = document.getElementById('joystick-knob');
+let joystickTouchId = null;
+let cameraTouchId = null;
+let lastTouchX = 0;
+
+function resetJoystick() {
+    joystickTouchId = null;
+    if (knob) knob.style.transform = 'translate(0px, 0px)';
+    moveVector = { x: 0, y: 0 };
+}
+
+function resetMovementState() {
+    moveForward = false;
+    moveBackward = false;
+    moveLeft = false;
+    moveRight = false;
+    resetJoystick();
+    cameraTouchId = null;
+}
+
+function updateCodeDisplay() {
+    const display = document.getElementById('code-display');
+    if (display) {
+        display.innerText = `[ ${collectedCodes[0]} ] [ ${collectedCodes[1]} ] [ ${collectedCodes[2]} ]`;
+    }
+}
+
+function resetGamePosition() {
+    hp = 100;
+    collectedCodes = ["_", "_", "_"];
+    updateCodeDisplay();
+    const hpEl = document.getElementById('hp');
+    if (hpEl) hpEl.innerText = '100%';
+    gameStarted = false;
+    isGameOver = false;
+    inModal = false;
+    nearbyTarget = null;
+    const promptEl = document.getElementById('interact-prompt');
+    if (promptEl) promptEl.style.display = 'none';
+
+    camera.position.set(0, 1.6, 0);
+    camera.rotation.set(0, 0, 0);
+    enemy.position.set(0, 1.2, 8);
+
+    chestMeshes.forEach(c => {
+        c.userData.opened = false;
+        c.material.color.setHex(0xf59e0b);
+    });
+}
+
+// 5. 시작 버튼 이벤트 바인딩
 const startBtn = document.getElementById('start-btn');
 const startScreen = document.getElementById('start-screen');
 
-// 2. 미션 시작 실행 함수
 function onStartMission(e) {
     if (e) {
         e.preventDefault();
         e.stopPropagation();
     }
-    
-    // 위치 및 리소스 초기화
     resetGamePosition();
-    
-    // 시작 화면 닫기
-    if (startScreen) {
-        startScreen.style.display = 'none';
-    }
-    
-    // 게임 시작 상태 변경
+    if (startScreen) startScreen.style.display = 'none';
     gameStarted = true;
-
-    // PC 환경 PointerLock 요청
     if (!isTouchDevice && document.body.requestPointerLock) {
         document.body.requestPointerLock();
     }
 }
 
-// 3. 버튼 클릭 및 터치 이벤트 직접 연결 (중요)
 if (startBtn) {
     startBtn.onclick = onStartMission;
     startBtn.addEventListener('click', onStartMission);
     startBtn.addEventListener('touchstart', onStartMission, { passive: false });
 }
 
-
-function onStartMission(e) {
-    if (e) e.preventDefault();
-    resetGamePosition();
-    startScreen.style.display = 'none';
-    gameStarted = true;
-    if (!isTouchDevice && document.body.requestPointerLock) {
-        document.body.requestPointerLock();
-    }
-}
-
-startBtn.addEventListener('click', onStartMission);
-startBtn.addEventListener('touchstart', onStartMission);
-
+// 6. 퀴즈 및 모달 상호작용
 function triggerNearbyInteraction() {
     if (!gameStarted || isGameOver || inModal || !nearbyTarget) return;
     if (nearbyTarget.type === 'chest') openQuiz(nearbyTarget.object);
@@ -273,11 +297,6 @@ function checkAnswer(selectedIdx) {
     closeModal('quiz-modal');
 }
 
-function updateCodeDisplay() {
-    document.getElementById('code-display').innerText = 
-        `[ ${collectedCodes[0]} ] [ ${collectedCodes[1]} ] [ ${collectedCodes[2]} ]`;
-}
-
 function openGateModal() {
     inModal = true;
     resetMovementState();
@@ -298,7 +317,8 @@ function submitGateCode() {
 }
 
 function closeModal(id) {
-    document.getElementById(id).style.display = 'none';
+    const modal = document.getElementById(id);
+    if (modal) modal.style.display = 'none';
     inModal = false;
     resetMovementState();
 
@@ -307,14 +327,7 @@ function closeModal(id) {
     }
 }
 
-function resetMovementState() {
-    moveForward = false; moveBackward = false; moveLeft = false; moveRight = false;
-    moveVector = { x: 0, y: 0 };
-    knob.style.transform = 'translate(0px, 0px)';
-    joystickTouchId = null;
-    cameraTouchId = null;
-}
-
+// 키보드 및 마우스 조작
 document.addEventListener('keydown', (e) => {
     if (e.code === 'KeyE') triggerNearbyInteraction();
     if (inModal) return;
@@ -337,12 +350,23 @@ document.addEventListener('mousemove', (e) => {
     }
 });
 
-// 5. 모바일 터치 & 조이스틱 오프셋 완벽 고정
-const zone = document.getElementById('joystick-zone');
-const knob = document.getElementById('joystick-knob');
-let joystickTouchId = null;
-let cameraTouchId = null;
-let lastTouchX = 0;
+// 모바일 터치 및 조이스틱 조작
+function updateJoystick(touch, rect) {
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    let dx = touch.clientX - centerX;
+    let dy = touch.clientY - centerY;
+    const maxRadius = rect.width / 2 - 20;
+
+    const dist = Math.hypot(dx, dy);
+    if (dist > maxRadius) {
+        dx = (dx / dist) * maxRadius;
+        dy = (dy / dist) * maxRadius;
+    }
+
+    if (knob) knob.style.transform = `translate(${dx}px, ${dy}px)`;
+    moveVector = { x: dx / maxRadius, y: dy / maxRadius };
+}
 
 window.addEventListener('touchstart', (e) => {
     if (!gameStarted || isGameOver || inModal) return;
@@ -388,29 +412,7 @@ window.addEventListener('touchend', (e) => {
     }
 });
 
-function resetJoystick() {
-    joystickTouchId = null;
-    knob.style.transform = 'translate(0px, 0px)';
-    moveVector = { x: 0, y: 0 };
-}
-
-function updateJoystick(touch, rect) {
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    let dx = touch.clientX - centerX;
-    let dy = touch.clientY - centerY;
-    const maxRadius = rect.width / 2 - 20;
-
-    const dist = Math.hypot(dx, dy);
-    if (dist > maxRadius) {
-        dx = (dx / dist) * maxRadius;
-        dy = (dy / dist) * maxRadius;
-    }
-
-    knob.style.transform = `translate(${dx}px, ${dy}px)`;
-    moveVector = { x: dx / maxRadius, y: dy / maxRadius };
-}
-
+// 벽 충돌 판정
 function checkWallCollision(nextPos) {
     const playerRadius = 0.6;
     const playerBox = new THREE.Box3(
@@ -423,7 +425,7 @@ function checkWallCollision(nextPos) {
     return false;
 }
 
-// 6. 메인 프레임 루프 (자동 계단 오르기 보정 포함)
+// 7. 메인 게임 루프
 const speed = 0.09;
 const enemySpeed = 0.024;
 
@@ -459,23 +461,23 @@ function animate() {
             if (!checkWallCollision(nextZ)) camera.position.z = targetPos.z;
         }
 
-        // --- 자동 계단 오르기/내리기 높이 보정 로직 ---
+        // 계단 자동 오르기/내리기
         if (camera.position.z <= -6.0 && camera.position.z >= -12.5 && Math.abs(camera.position.x) <= 2.8) {
-            const progress = (-6.0 - camera.position.z) / 6.5; // 계단 경사 진행률
-            camera.position.y = 1.6 + (progress * 3.5); // 자동으로 높이 증가
+            const progress = (-6.0 - camera.position.z) / 6.5;
+            camera.position.y = 1.6 + (progress * 3.5);
         } else if (camera.position.z < -12.5) {
-            camera.position.y = 5.1; // 2층 테라스 보정
+            camera.position.y = 5.1;
         } else {
-            camera.position.y = 1.6; // 1층 바닥 보정
+            camera.position.y = 1.6;
         }
 
-        // 추격자 AI 이동 (높이 동기화)
+        // 추격자 이동
         const enemyDir = new THREE.Vector3().subVectors(camera.position, enemy.position);
         enemyDir.y = 0; enemyDir.normalize();
         enemy.position.addScaledVector(enemyDir, enemySpeed);
         enemy.position.y = camera.position.y - 0.4;
 
-        // 접근 대상 확인
+        // 상호작용 대상 감지
         let foundTarget = null;
         chestMeshes.forEach(chest => {
             chest.rotation.y += 0.01;
@@ -497,6 +499,7 @@ function animate() {
             promptBtn.style.display = 'none';
         }
 
+        // 피격 판정
         if (camera.position.distanceTo(enemy.position) < 1.6) {
             hp -= 1;
             document.getElementById('hp').innerText = Math.max(0, hp) + '%';
