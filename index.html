@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>NanoCarrier 3D: Dungeon LAB Escape</title>
+    <!-- 고딕/룬 느낌의 타이틀 폰트 로드 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Noto+Serif+KR:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
@@ -24,10 +28,45 @@
         </div>
     </div>
 
+    <!-- 다크 판타지 / MISTOVER 스타일 시작 화면 -->
     <div id="start-screen" class="overlay-screen">
-        <h1 style="color:#fbbf24;">세포 연구소 던전 탈출</h1>
-        <p>각 방에 숨겨진 3개의 암호 상자 문제를 맞춰 코드를 모으고<br>중앙 2층 게이트로 탈출하세요!</p>
-        <button id="start-btn" class="start-btn">DUNGEON START</button>
+        <!-- 배경 안개 및 발광 포자 연출 레이어 -->
+        <div class="mist-bg"></div>
+        <div class="mist-fog fog-1"></div>
+        <div class="mist-fog fog-2"></div>
+        <div class="spores-left"></div>
+        <div class="spores-right"></div>
+        <div class="vignette"></div>
+
+        <!-- 상단 중앙 타이틀 로고 -->
+        <div class="title-wrapper">
+            <div class="title-sub">DUNGEON LAB ESCAPE</div>
+            <h1 class="rune-title" data-text="NANOCARRIER">NANOCARRIER</h1>
+        </div>
+
+        <!-- 하단 고전 목재/양피지 스타일 메뉴 패널 -->
+        <div class="rpg-menu-box">
+            <button id="start-btn" class="rpg-menu-item active">
+                <span class="rune-crest">❖</span>
+                <span class="menu-label">새 탐사 시작하기</span>
+                <span class="key-badge">A</span>
+            </button>
+            <button type="button" class="rpg-menu-item" onclick="toggleGuideModal(true)">
+                <span class="rune-crest">◈</span>
+                <span class="menu-label">임무 브리핑</span>
+            </button>
+        </div>
+
+        <!-- 임무 브리핑 팝업 (메뉴에서 클릭 시 표시) -->
+        <div id="briefing-box" class="briefing-panel" style="display: none;">
+            <h3>[ 세포 연구소 던전 탈출 수칙 ]</h3>
+            <p>1. 중앙 홀을 배회하는 <strong>분해 효소(리소좀)</strong>를 피해 3개의 방을 탐색하세요.</p>
+            <p>2. 각 방의 보물상자 퀴즈를 풀어 <strong>3자리 암호 코드</strong>를 수집하세요.</p>
+            <p>3. 2층 테라스의 <strong>표적 수용체 게이트</strong>에 암호를 입력해 탈출하세요.</p>
+            <button type="button" class="rpg-close-btn" onclick="toggleGuideModal(false)">돌아가기</button>
+        </div>
+
+        <div class="version-tag">v1.0.3 · CELLULAR LAB EDITION</div>
     </div>
 
     <div id="quiz-modal" class="modal">
@@ -48,6 +87,12 @@
 
     <div id="message-text"></div>
 
+    <script>
+        function toggleGuideModal(show) {
+            const box = document.getElementById('briefing-box');
+            if (box) box.style.display = show ? 'block' : 'none';
+        }
+    </script>
     <script src="game.js"></script>
 </body>
 </html>
