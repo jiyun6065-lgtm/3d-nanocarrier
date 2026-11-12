@@ -15,7 +15,7 @@ camera.add(playerLight);
 scene.add(camera);
 
 scene.add(new THREE.AmbientLight(0x94a3b8, 0.35));
-const dirLight = new THREE.DirectionalLight(0xfbbf24, 0.20);
+const dirLight = new THREE.DirectionalLight(0xfbbf24, 0.10);
 dirLight.position.set(25, 50, 25);
 scene.add(dirLight);
 
