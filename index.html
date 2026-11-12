@@ -6,7 +6,7 @@
     <title>NanoCarrier 3D: Dungeon LAB Escape</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@600;700&family=Noto+Serif+KR:wght@600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@600;700&family=Noto+Serif+KR:wght@600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
@@ -108,7 +108,7 @@
         </div>
 
         <div class="bottom-brand">CELLULAR LAB EDITION</div>
-        <div class="version-tag">v1.0.5</div>
+        <div class="version-tag">v1.0.6</div>
     </div>
 
     <div id="quiz-modal" class="modal">
@@ -128,6 +128,74 @@
     </div>
 
     <div id="message-text"></div>
+
+    <!-- 리그 오브 레전드 스타일 실패 안내 배너 오버레이 -->
+    <div id="defeat-overlay" class="crest-overlay" style="display: none;">
+        <div class="crest-container">
+            <!-- 상하로 피어오르는 붉은 불꽃 오라 -->
+            <div class="crest-aura"></div>
+
+            <!-- 양쪽 날개 금속 문양 & 중앙 쉴드 SVG -->
+            <svg class="crest-svg" viewBox="0 0 760 440" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="goldTrim" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#f8fafc"/>
+                        <stop offset="30%" stop-color="#d4af37"/>
+                        <stop offset="70%" stop-color="#785319"/>
+                        <stop offset="100%" stop-color="#fef08a"/>
+                    </linearGradient>
+                    <linearGradient id="darkWing" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#1f1111"/>
+                        <stop offset="50%" stop-color="#090707"/>
+                        <stop offset="100%" stop-color="#2a0e0e"/>
+                    </linearGradient>
+                    <radialGradient id="shieldFace" cx="50%" cy="45%" r="55%">
+                        <stop offset="0%" stop-color="#291d16"/>
+                        <stop offset="70%" stop-color="#140f0c"/>
+                        <stop offset="100%" stop-color="#070505"/>
+                    </radialGradient>
+                </defs>
+
+                <!-- 좌측 날개 실루엣 -->
+                <path d="M 220,165 C 150,145 75,105 30,55 C 65,115 95,145 140,165 C 90,160 55,145 25,120 C 65,165 115,185 165,195 C 110,205 70,200 40,185 C 85,225 145,235 200,235 C 145,260 110,285 95,315 C 145,295 190,275 235,270 Z"
+                      fill="url(#darkWing)" stroke="url(#goldTrim)" stroke-width="3.5" stroke-linejoin="round"/>
+                <!-- 우측 날개 실루엣 (좌우 대칭) -->
+                <path d="M 540,165 C 610,145 685,105 730,55 C 695,115 665,145 620,165 C 670,160 705,145 735,120 C 695,165 645,185 595,195 C 650,205 690,200 720,185 C 675,225 615,235 560,235 C 615,260 650,285 665,315 C 615,295 570,275 525,270 Z"
+                      fill="url(#darkWing)" stroke="url(#goldTrim)" stroke-width="3.5" stroke-linejoin="round"/>
+
+                <!-- 상단 왕관 장식 -->
+                <path d="M 310,145 L 345,115 L 380,92 L 415,115 L 450,145 Z"
+                      fill="url(#darkWing)" stroke="url(#goldTrim)" stroke-width="3"/>
+
+                <!-- 하단 꼬리 장식 -->
+                <path d="M 325,295 L 380,355 L 435,295 Z"
+                      fill="url(#darkWing)" stroke="url(#goldTrim)" stroke-width="3"/>
+
+                <!-- 중앙 메인 육각 쉴드 명판 (외곽 금테) -->
+                <path d="M 215,152 Q 380,130 545,152 L 568,220 L 545,288 Q 380,310 215,288 L 192,220 Z"
+                      fill="url(#goldTrim)" stroke="#090707" stroke-width="3"/>
+
+                <!-- 중앙 메인 육각 쉴드 명판 (내부 어두운 판) -->
+                <path d="M 224,160 Q 380,140 536,160 L 556,220 L 536,280 Q 380,300 224,280 L 204,220 Z"
+                      fill="url(#shieldFace)" stroke="#451a03" stroke-width="2"/>
+
+                <!-- 좌우 날카로운 은빛/금빛 측면 클로(Claw) 장식 -->
+                <path d="M 218,150 L 185,185 L 202,220 L 185,255 L 218,290 L 208,255 L 222,220 L 208,185 Z"
+                      fill="url(#goldTrim)"/>
+                <path d="M 542,150 L 575,185 L 558,220 L 575,255 L 542,290 L 552,255 L 538,220 L 552,185 Z"
+                      fill="url(#goldTrim)"/>
+            </svg>
+
+            <!-- 중앙 텍스트 영역 -->
+            <div class="crest-text-box">
+                <div class="crest-main-title">패배</div>
+                <div class="crest-sub-reason">분해 효소에 의해 지질막이 파괴되었습니다</div>
+            </div>
+
+            <!-- 배너 하단 '계속' 버튼 -->
+            <button type="button" class="crest-continue-btn" onclick="returnToTitleFromDefeat()">계속</button>
+        </div>
+    </div>
 
     <script>
         function toggleGuideModal(show) {
