@@ -27,7 +27,6 @@ html, body {
     cursor: pointer;
 }
 
-/* 조이스틱 컨테이너 고정 레이아웃 */
 #joystick-wrapper {
     position: fixed;
     bottom: calc(30px + env(safe-area-inset-bottom, 0px));
@@ -85,6 +84,7 @@ html, body {
     padding: 14px 36px; font-size: 18px; font-weight: bold;
     background: linear-gradient(135deg, #d97706, #b45309); color: white;
     border: none; border-radius: 30px; cursor: pointer; margin-top: 15px;
+    pointer-events: auto;
 }
 
 #message-text {
