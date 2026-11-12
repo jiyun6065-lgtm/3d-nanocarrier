@@ -17,22 +17,35 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
 
-// 컨트롤 설정
+// 컨트롤 및 시작 화면 설정
 const controls = new PointerLockControls(camera, document.body);
-const blocker = document.getElementById('blocker');
-const instructions = document.getElementById('instructions');
+const startScreen = document.getElementById('start-screen');
+const startBtn = document.getElementById('start-btn');
+let gameStarted = false;
 
-if (instructions && blocker) {
-    instructions.addEventListener('click', () => controls.lock());
-    controls.addEventListener('lock', () => {
-        instructions.style.display = 'none';
-        blocker.style.display = 'none';
-    });
-    controls.addEventListener('unlock', () => {
-        blocker.style.display = 'flex';
-        instructions.style.display = '';
-    });
+function handleStartGame(e) {
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    gameStarted = true;
+    if (startScreen) startScreen.style.display = 'none';
+    controls.lock();
 }
+
+if (startBtn) {
+    startBtn.addEventListener('click', handleStartGame);
+    startBtn.addEventListener('touchstart', handleStartGame, { passive: false });
+}
+
+// ESC 키 등으로 마우스 잠금이 풀렸을 때 다시 시작 화면 표시
+controls.addEventListener('unlock', () => {
+    if (!isGameOver && startScreen) {
+        startScreen.style.display = 'flex';
+        if (startBtn) startBtn.innerText = 'RESUME MISSION';
+    }
+});
+
 
 // ==========================================
 // 2. 조명 및 푸른 계열 횃불 시스템
