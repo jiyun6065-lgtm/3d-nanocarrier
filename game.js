@@ -1,7 +1,7 @@
-// 1. Scene & Atmosphere (던전 분위기 조명)
+// 1. Scene & Lighting (밝고 따뜻한 던전 조명)
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0b0f19);
-scene.fog = new THREE.FogExp2(0x0b0f19, 0.025);
+scene.background = new THREE.Color(0x1e293b); // 훨씬 밝은 미드나이트 블루 배경
+scene.fog = new THREE.FogExp2(0x1e293b, 0.012); // 안개 대폭 축소 (시야 투명)
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -9,33 +9,34 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 document.body.appendChild(renderer.domElement);
 
-// 카메라 플레이어용 램프 조명
-const playerLight = new THREE.PointLight(0xfbbf24, 1.2, 18);
+// 플레이어 비추는 개인 등불
+const playerLight = new THREE.PointLight(0xffedd5, 1.5, 20);
 camera.add(playerLight);
 scene.add(camera);
 
-// 던전 전체 조명
-scene.add(new THREE.AmbientLight(0x334155, 1.0));
+// 전체 환경 조명 (밝기 대폭 인상)
+scene.add(new THREE.AmbientLight(0xcbd5e1, 1.8));
 
-// 2. 던전 조명(Torch Light) 배치
+// 방마다 횃불 조명 추가 함수
 function addTorch(x, y, z, color = 0xf59e0b) {
-    const torchLight = new THREE.PointLight(color, 2.0, 15);
+    const torchLight = new THREE.PointLight(color, 2.5, 18);
     torchLight.position.set(x, y, z);
     scene.add(torchLight);
 
-    const torchGeo = new THREE.SphereGeometry(0.2, 8, 8);
-    const torchMat = new THREE.MeshBasicMaterial({ color: color });
+    const torchGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.6);
+    const torchMat = new THREE.MeshBasicMaterial({ color: 0x78350f });
     const torchMesh = new THREE.Mesh(torchGeo, torchMat);
-    torchMesh.position.set(x, y, z);
+    torchMesh.position.set(x, y - 0.2, z);
     scene.add(torchMesh);
+
+    const flameGeo = new THREE.SphereGeometry(0.2, 8, 8);
+    const flameMat = new THREE.MeshBasicMaterial({ color: color });
+    const flameMesh = new THREE.Mesh(flameGeo, flameMat);
+    flameMesh.position.set(x, y + 0.2, z);
+    scene.add(flameMesh);
 }
 
-addTorch(-14, 4, -14, 0xf59e0b);
-addTorch(14, 4, -14, 0xf59e0b);
-addTorch(-14, 4, 14, 0x38bdf8);
-addTorch(14, 4, 14, 0x38bdf8);
-
-// 3. 퀴즈 데이터
+// 2. 퀴즈 데이터
 const quizzes = [
     { q: "세포막의 주요 구성 성분으로, 친수성 머리와 소수성 다리를 가진 물질은?", options: ["1. 인지질", "2. 포도당", "3. 아미노산"], ans: 0, code: "7" },
     { q: "약물 전달 시스템(DDS)에서 표적 세포에 특이적으로 결합하는 수용체 부착물은?", options: ["1. 알콜", "2. 리간드", "3. 효소"], ans: 1, code: "3" },
@@ -46,43 +47,71 @@ let collectedCodes = ["_", "_", "_"];
 const wallBoxes = [];
 const chestMeshes = [];
 
-// 4. 던전 맵 지형
-const wallMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.8 });
-const floorMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.7 });
+// 3. 디테일 던전 맵 빌더 (방 구획 구현)
+const wallMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.6 });
+const floorMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.5 });
+const woodMat = new THREE.MeshStandardMaterial({ color: 0x92400e, roughness: 0.7 });
 
-function createBox(w, h, d, x, y, z, mat = wallMat) {
-    const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+function createWall(w, h, d, x, y, z) {
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), wallMat);
     mesh.position.set(x, y, z);
     scene.add(mesh);
     wallBoxes.push(new THREE.Box3().setFromObject(mesh));
     return mesh;
 }
 
-// 외곽 벽
-createBox(40, 6, 1, 0, 3, -20);
-createBox(40, 6, 1, 0, 3, 20);
-createBox(1, 6, 40, -20, 3, 0);
-createBox(1, 6, 40, 20, 3, 0);
+// 외곽 벽 (40x40)
+createWall(40, 6, 1, 0, 3, -20);
+createWall(40, 6, 1, 0, 3, 20);
+createWall(1, 6, 40, -20, 3, 0);
+createWall(1, 6, 40, 20, 3, 0);
 
 // 메인 바닥
 const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), floorMat);
 floor.rotation.x = -Math.PI / 2;
 scene.add(floor);
 
-// 2층 테라스 & 계단
-createBox(38, 0.5, 8, 0, 3.5, -15, wallMat);
-createBox(2, 4, 2, -10, 2, -12);
-createBox(2, 4, 2, 10, 2, -12);
+// --- 3개의 독립된 방(Room) 벽 구획 및 출입문 설계 ---
+// 방 1 (좌측 방: X: -20~-6, Z: 2~18)
+createWall(14, 6, 0.8, -13, 3, 2);  // 방1 남쪽 벽
+createWall(0.8, 6, 10, -6, 3, 13);  // 방1 동쪽 벽 (입구 제외)
+addTorch(-13, 4, 17, 0xf59e0b);
 
+// 방 2 (우측 방: X: 6~20, Z: 2~18)
+createWall(14, 6, 0.8, 13, 3, 2);   // 방2 남쪽 벽
+createWall(0.8, 6, 10, 6, 3, 13);   // 방2 서쪽 벽
+addTorch(13, 4, 17, 0xf59e0b);
+
+// 방 3 (남쪽 중앙 방: X: -7~7, Z: -18~-6)
+createWall(6, 6, 0.8, -10, 3, -6);
+createWall(6, 6, 0.8, 10, 3, -6);
+addTorch(0, 4, -17, 0x38bdf8);
+
+// 2층 테라스 & 계단 구획 (북쪽 게이트 방)
+createWall(38, 0.5, 8, 0, 3.5, -15);
 for (let i = 0; i < 7; i++) {
-    createBox(4, 0.5, 0.8, 0, (i * 0.5) + 0.25, -7 - (i * 0.8));
+    const step = new THREE.Mesh(new THREE.BoxGeometry(4, 0.5, 0.8), wallMat);
+    step.position.set(0, (i * 0.5) + 0.25, -7 - (i * 0.8));
+    scene.add(step);
+    wallBoxes.push(new THREE.Box3().setFromObject(step));
 }
 
-// 5. 상자 & 게이트 배치
-const chestPositions = [[-12, 1, 5], [12, 1, 5], [0, 1, 12]];
+// 각 방안의 디테일 장식 (테이블/받침대)
+function createDesk(x, z) {
+    const desk = new THREE.Mesh(new THREE.BoxGeometry(2.5, 1, 2), woodMat);
+    desk.position.set(x, 0.5, z);
+    scene.add(desk);
+    wallBoxes.push(new THREE.Box3().setFromObject(desk));
+}
+createDesk(-13, 13); // 방1 받침대
+createDesk(13, 13);  // 방2 받침대
+createDesk(0, -14);  // 방3 받침대
+
+// 4. 상자 배치 (각 방안의 받침대 위)
+const chestPositions = [[-13, 1.6, 13], [13, 1.6, 13], [0, 1.6, -14]];
 chestPositions.forEach((pos, idx) => {
-    const chestGeo = new THREE.BoxGeometry(1.5, 1.2, 1.2);
-    const chestMat = new THREE.MeshStandardMaterial({ color: 0xd97706, emissive: 0x78350f });
+    const chestGeo = new THREE.BoxGeometry(1.2, 1, 1);
+    const chestMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xb45309 });
     const chest = new THREE.Mesh(chestGeo, chestMat);
     chest.position.set(pos[0], pos[1], pos[2]);
     chest.userData = { id: idx, opened: false };
@@ -90,20 +119,21 @@ chestPositions.forEach((pos, idx) => {
     chestMeshes.push(chest);
 });
 
+// 게이트 (2층 중앙 방)
 const gateGeo = new THREE.TorusGeometry(1.5, 0.3, 16, 100);
 const gateMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0284c7 });
 const gate = new THREE.Mesh(gateGeo, gateMat);
 gate.position.set(0, 5.2, -17.5);
 scene.add(gate);
 
-// 6. 추격자 AI
+// 5. 추격자 AI (리소좀)
 const enemyGeo = new THREE.SphereGeometry(1.2, 32, 32);
 const enemyMat = new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0x991b1b });
 const enemy = new THREE.Mesh(enemyGeo, enemyMat);
-enemy.position.set(0, 1.2, 10);
+enemy.position.set(0, 1.2, 0);
 scene.add(enemy);
 
-// 7. 상태 변수 및 이벤트
+// 6. 게임 상태 및 조작 제어
 let hp = 100;
 let gameStarted = false;
 let isGameOver = false;
@@ -131,13 +161,13 @@ function resetGamePosition() {
     nearbyTarget = null;
     document.getElementById('interact-prompt').style.display = 'none';
 
-    camera.position.set(0, 1.6, 10);
+    camera.position.set(0, 1.6, 0);
     camera.rotation.set(0, 0, 0);
-    enemy.position.set(0, 1.2, -5);
+    enemy.position.set(0, 1.2, 8);
 
     chestMeshes.forEach(c => {
         c.userData.opened = false;
-        c.material.color.setHex(0xd97706);
+        c.material.color.setHex(0xf59e0b);
     });
 }
 
@@ -266,7 +296,7 @@ document.addEventListener('mousemove', (e) => {
     }
 });
 
-// 모바일 터치 조작
+// --- 조이스틱 위치 및 멀티터치 트래킹 오류 수정 ---
 const zone = document.getElementById('joystick-zone');
 const knob = document.getElementById('joystick-knob');
 let joystickTouchId = null;
@@ -280,8 +310,8 @@ window.addEventListener('touchstart', (e) => {
         const touch = e.changedTouches[i];
         const rect = zone.getBoundingClientRect();
 
-        if (touch.clientX >= rect.left && touch.clientX <= rect.right &&
-            touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+        if (touch.clientX >= rect.left - 10 && touch.clientX <= rect.right + 10 &&
+            touch.clientY >= rect.top - 10 && touch.clientY <= rect.bottom + 10) {
             if (joystickTouchId === null) {
                 joystickTouchId = touch.identifier;
                 updateJoystick(touch, rect);
@@ -328,7 +358,7 @@ function updateJoystick(touch, rect) {
     const centerY = rect.top + rect.height / 2;
     let dx = touch.clientX - centerX;
     let dy = touch.clientY - centerY;
-    const maxRadius = rect.width / 2 - 25;
+    const maxRadius = rect.width / 2 - 20;
 
     const dist = Math.hypot(dx, dy);
     if (dist > maxRadius) {
@@ -352,9 +382,9 @@ function checkWallCollision(nextPos) {
     return false;
 }
 
-// 메인 무브먼트 & AI
+// 메인 루프
 const speed = 0.09;
-const enemySpeed = 0.025;
+const enemySpeed = 0.024;
 
 function animate() {
     requestAnimationFrame(animate);
@@ -388,7 +418,7 @@ function animate() {
             if (!checkWallCollision(nextZ)) camera.position.z = targetPos.z;
         }
 
-        // 계단/높낮이 보정
+        // 계단 높이 보정
         if (camera.position.z < -7 && camera.position.z > -12.5 && Math.abs(camera.position.x) < 2.5) {
             const progress = (-7 - camera.position.z) / 5.5;
             camera.position.y = 1.6 + (progress * 3.5);
@@ -404,11 +434,11 @@ function animate() {
         enemy.position.addScaledVector(enemyDir, enemySpeed);
         enemy.position.y = camera.position.y - 0.4;
 
-        // 근처 상자/게이트 감지
+        // 접근 대상 감지
         let foundTarget = null;
         chestMeshes.forEach(chest => {
             chest.rotation.y += 0.01;
-            if (!chest.userData.opened && camera.position.distanceTo(chest.position) < 2.5) {
+            if (!chest.userData.opened && camera.position.distanceTo(chest.position) < 2.8) {
                 foundTarget = { type: 'chest', object: chest };
             }
         });
@@ -426,7 +456,6 @@ function animate() {
             promptBtn.style.display = 'none';
         }
 
-        // 피격 처리
         if (camera.position.distanceTo(enemy.position) < 1.6) {
             hp -= 1;
             document.getElementById('hp').innerText = Math.max(0, hp) + '%';
