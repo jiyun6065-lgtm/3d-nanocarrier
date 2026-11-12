@@ -1,7 +1,7 @@
 // 1. Scene & Lighting 설정
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x1e293b);
-scene.fog = new THREE.FogExp2(0x1e293b, 0.005);
+scene.background = new THREE.Color(0x090d16);
+scene.fog = new THREE.FogExp2(0x1e293b, 0.0014);
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -10,12 +10,12 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 document.body.appendChild(renderer.domElement);
 
 // 플레이어 개인 등불 및 환경 조명
-const playerLight = new THREE.PointLight(0xffedd5, 1.6, 45);
+const playerLight = new THREE.PointLight(0xffedd5, 0.9, 25);
 camera.add(playerLight);
 scene.add(camera);
 
-scene.add(new THREE.AmbientLight(0x94a3b8, 1.45));
-const dirLight = new THREE.DirectionalLight(0xfbbf24, 0.75);
+scene.add(new THREE.AmbientLight(0x94a3b8, 0.45));
+const dirLight = new THREE.DirectionalLight(0xfbbf24, 0.25);
 dirLight.position.set(25, 50, 25);
 scene.add(dirLight);
 
