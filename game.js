@@ -453,13 +453,11 @@ const gate = new THREE.Mesh(gateGeo, gateMat);
 gate.position.set(0, 8.5, -53);
 scene.add(gate);
 
-// =========================================================
 // 추격자 AI (리소좀) 3개체 생성 및 배치
-// =========================================================
 const enemySpawnData = [
-    { startX: -14, startZ: -14, patrolX: -12, patrolZ: -12 }, // 북서쪽 담당
-    { startX: 14,  startZ: -14, patrolX: 12,  patrolZ: -12 }, // 북동쪽 담당
-    { startX: -14, startZ: 14,  patrolX: -12, patrolZ: 12 }   // 남서쪽 담당
+    { startX: -14, startZ: -14, patrolX: -12, patrolZ: -12 },
+    { startX: 14,  startZ: -14, patrolX: 12,  patrolZ: -12 },
+    { startX: -14, startZ: 14,  patrolX: -12, patrolZ: 12 }
 ];
 
 const enemies = [];
@@ -537,10 +535,12 @@ function resetGamePosition() {
     const promptEl = document.getElementById('interact-prompt');
     if (promptEl) promptEl.style.display = 'none';
 
+    const gateInput = document.getElementById('gate-input');
+    if (gateInput) gateInput.value = '';
+
     camera.position.set(0, 2.1, 14);
     camera.rotation.set(0, 0, 0);
 
-    // 3기의 추격자 초기 위치로 복귀
     enemies.forEach(e => {
         e.position.set(e.userData.startX, 1.5, e.userData.startZ);
     });
@@ -562,6 +562,12 @@ window.startGameNow = function(e) {
     }
     const briefingBox = document.getElementById('briefing-box');
     if (briefingBox) briefingBox.style.display = 'none';
+
+    const defeatOverlay = document.getElementById('defeat-overlay');
+    if (defeatOverlay) defeatOverlay.style.display = 'none';
+
+    const victoryOverlay = document.getElementById('victory-overlay');
+    if (victoryOverlay) victoryOverlay.style.display = 'none';
 
     resetGamePosition();
 
@@ -631,6 +637,11 @@ function checkAnswer(selectedIdx) {
         alert("오답입니다! 지질막 내구도가 15% 감소합니다.");
         hp -= 15;
         document.getElementById('hp').innerText = Math.max(0, hp) + '%';
+        if (hp <= 0) {
+            closeModal('quiz-modal');
+            gameFailed();
+            return;
+        }
     }
     closeModal('quiz-modal');
 }
@@ -661,7 +672,9 @@ function closeModal(id) {
     resetMovementState();
 
     if (!isTouchDevice && gameStarted && !isGameOver) {
-        document.body.requestPointerLock();
+        try {
+            document.body.requestPointerLock();
+        } catch (err) {}
     }
 }
 
@@ -839,7 +852,7 @@ function animate() {
                 enemyDir.y = 0;
                 enemyDir.normalize();
 
-                // 다른 추격자 개체와 너무 겹치지 않도록 밀어내는 분리 벡터 적용
+                // 다른 추격자 개체와 겹치지 않도록 밀어내는 분리 벡터 적용
                 enemies.forEach((other, otherIdx) => {
                     if (idx !== otherIdx) {
                         const distToOther = enemy.position.distanceTo(other.position);
@@ -901,6 +914,7 @@ function animate() {
     renderer.render(scene, camera);
 }
 
+// 8. 실패 & 승리 배너 출력 및 타이틀 복귀 함수
 function gameFailed() {
     if (isGameOver) return;
     isGameOver = true;
@@ -915,28 +929,6 @@ function gameFailed() {
         defeatOverlay.style.display = 'flex';
     }
 }
-
-
-
-
-function gameSuccess() {
-    if (isGameOver) return;
-    isGameOver = true;
-    resetMovementState();
-    if (document.pointerLockElement) document.exitPointerLock();
-
-    const msg = document.getElementById('message-text');
-    msg.innerHTML = "<span style='color:#38bdf8;'>표적 수용체 결합 & 던전 탈출 성공!</span>";
-    msg.style.display = 'block';
-
-    setTimeout(() => {
-        msg.style.display = 'none';
-        document.getElementById('start-screen').style.display = 'flex';
-        resetGamePosition();
-    }, 3000);
-}
-
-
 
 window.returnToTitleFromDefeat = function(e) {
     if (e) {
@@ -953,5 +945,42 @@ window.returnToTitleFromDefeat = function(e) {
     }
     resetGamePosition();
 };
+
+function gameSuccess() {
+    if (isGameOver) return;
+    isGameOver = true;
+    resetMovementState();
+    if (document.pointerLockElement) document.exitPointerLock();
+
+    const promptBtn = document.getElementById('interact-prompt');
+    if (promptBtn) promptBtn.style.display = 'none';
+
+    const victoryOverlay = document.getElementById('victory-overlay');
+    if (victoryOverlay) {
+        victoryOverlay.style.display = 'flex';
+    }
+}
+
+window.returnToTitleFromVictory = function(e) {
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    const victoryOverlay = document.getElementById('victory-overlay');
+    if (victoryOverlay) {
+        victoryOverlay.style.display = 'none';
+    }
+    const startScreen = document.getElementById('start-screen');
+    if (startScreen) {
+        startScreen.style.display = 'flex';
+    }
+    resetGamePosition();
+};
+
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
 
 animate();
