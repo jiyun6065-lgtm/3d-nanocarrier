@@ -180,38 +180,41 @@ const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 
 const joystickWrapper = document.getElementById('joystick-wrapper');
 if (isTouchDevice) joystickWrapper.style.display = 'block';
 
-// 시작 버튼 및 모달 요소 가져오기
+// 1. 버튼 및 시작 화면 요소 가져오기
 const startBtn = document.getElementById('start-btn');
 const startScreen = document.getElementById('start-screen');
 
+// 2. 미션 시작 실행 함수
 function onStartMission(e) {
     if (e) {
         e.preventDefault();
         e.stopPropagation();
     }
     
-    // 1. 게임 위치 및 데이터 초기화
+    // 위치 및 리소스 초기화
     resetGamePosition();
     
-    // 2. 시작 화면 숨기기
+    // 시작 화면 닫기
     if (startScreen) {
         startScreen.style.display = 'none';
     }
     
-    // 3. 게임 시작 상태로 변경
+    // 게임 시작 상태 변경
     gameStarted = true;
 
-    // 4. PC(마우스) 환경인 경우 PointerLock 실행
+    // PC 환경 PointerLock 요청
     if (!isTouchDevice && document.body.requestPointerLock) {
         document.body.requestPointerLock();
     }
 }
 
-// 클릭 및 터치 이벤트 모두 등록
+// 3. 버튼 클릭 및 터치 이벤트 직접 연결 (중요)
 if (startBtn) {
     startBtn.onclick = onStartMission;
+    startBtn.addEventListener('click', onStartMission);
     startBtn.addEventListener('touchstart', onStartMission, { passive: false });
 }
+
 
 function onStartMission(e) {
     if (e) e.preventDefault();
